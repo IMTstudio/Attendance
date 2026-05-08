@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Absensi — SiAbsen Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --ink: #0d1117;
+    --surface: #ffffff;
+    --bg: #f4f6f9;
+    --border: #e1e8ef;
+    --muted: #7a8699;
+    --hadir: #16a34a;
+    --hadir-bg: #dcfce7;
+    --izin: #2563eb;
+    --izin-bg: #dbeafe;
+    --sakit: #d97706;
+    --sakit-bg: #fef3c7;
+    --alpha: #dc2626;
+    --alpha-bg: #fee2e2;
+    --accent: #6366f1;
+    --accent-bg: #eef2ff;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overscroll-behavior: none;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--ink);
+    color: white;
+    padding: 1rem 1.25rem 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+  }
+
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+  }
+
+  .header-brand { font-size: 1rem; font-weight: 800; letter-spacing: -0.02em; }
+  .header-sub { font-size: 0.7rem; color: rgba(255,255,255,0.5); margin-top: 1px; }
+
+  .header-user {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .avatar {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.8rem;
+  }
+
+  .user-name { font-size: 0.8rem; font-weight: 600; }
+  .user-role { font-size: 0.65rem; color: rgba(255,255,255,0.5); }
+
+  /* FILTER BAR */
+  .filter-bar {
+    background: white;
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 1rem;
+  }
+
+  .filter-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .filter-row.three { grid-template-columns: 1fr 1fr 1fr; }
+
+  select, input[type="date"] {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    border: 1.5px solid var(--border);
+    border-radius: 0.6rem;
+    font-family: inherit;
+    font-size: 0.8rem;
+    color: var(--ink);
+    background: var(--bg);
+    -webkit-appearance: none;
+    appearance: none;
+    outline: none;
+  }
+
+  select:focus, input:focus { border-color: var(--accent); }
+
+  .btn-load {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 0.75rem;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+
+  .btn-load:active { opacity: 0.8; }
+  .btn-load:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* LEGEND */
+  .legend {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    background: white;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    flex-shrink: 0;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+
+  /* STUDENT LIST */
+  .list-header {
+    padding: 0.75rem 1rem 0.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .list-title { font-size: 0.8rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .list-count { font-size: 0.75rem; color: var(--muted); }
+
+  .student-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 0.75rem;
+    padding-bottom: 6rem;
+  }
+
+  .student-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 0.85rem 1rem;
+    margin-bottom: 0.5rem;
+    border: 2px solid transparent;
+    transition: border-color 0.15s;
+    position: relative;
+  }
+
+  .student-card.status-H { border-color: var(--hadir); }
+  .student-card.status-I { border-color: var(--izin); }
+  .student-card.status-S { border-color: var(--sakit); }
+  .student-card.status-A { border-color: var(--alpha); }
+
+  .student-top {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .student-no {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; font-weight: 700; color: var(--muted);
+    flex-shrink: 0;
+  }
+
+  .student-info { flex: 1; min-width: 0; }
+  .student-name { font-size: 0.9rem; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .student-nisn { font-size: 0.7rem; color: var(--muted); }
+
+  .status-badge {
+    padding: 0.25rem 0.6rem;
+    border-radius: 0.4rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .badge-H { background: var(--hadir-bg); color: var(--hadir); }
+  .badge-I { background: var(--izin-bg); color: var(--izin); }
+  .badge-S { background: var(--sakit-bg); color: var(--sakit); }
+  .badge-A { background: var(--alpha-bg); color: var(--alpha); }
+  .badge-none { background: var(--bg); color: var(--muted); }
+
+  /* STATUS BUTTONS */
+  .status-buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.4rem;
+  }
+
+  .status-btn {
+    padding: 0.45rem 0.3rem;
+    border: 2px solid var(--border);
+    border-radius: 0.6rem;
+    background: var(--bg);
+    font-family: inherit;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  .status-btn:active { transform: scale(0.96); }
+
+  .status-btn.active-H { background: var(--hadir-bg); border-color: var(--hadir); color: var(--hadir); }
+  .status-btn.active-I { background: var(--izin-bg); border-color: var(--izin); color: var(--izin); }
+  .status-btn.active-S { background: var(--sakit-bg); border-color: var(--sakit); color: var(--sakit); }
+  .status-btn.active-A { background: var(--alpha-bg); border-color: var(--alpha); color: var(--alpha); }
+
+  /* QUICK ALL HADIR */
+  .quick-bar {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem 0;
+  }
+
+  .quick-btn {
+    flex: 1;
+    padding: 0.55rem;
+    border: none;
+    border-radius: 0.6rem;
+    font-family: inherit;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+
+  .quick-btn:active { opacity: 0.7; }
+  .quick-hadir { background: var(--hadir-bg); color: var(--hadir); }
+  .quick-reset { background: var(--bg); color: var(--muted); border: 1.5px solid var(--border); }
+
+  /* BOTTOM SUBMIT */
+  .bottom-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: white;
+    border-top: 1px solid var(--border);
+    padding: 0.75rem 1rem;
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+    z-index: 100;
+  }
+
+  .progress-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--hadir));
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+
+  .progress-text {
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+  }
+
+  .btn-submit {
+    width: 100%;
+    padding: 0.9rem;
+    background: var(--ink);
+    color: white;
+    border: none;
+    border-radius: 1rem;
+    font-family: inherit;
+    font-weight: 800;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    letter-spacing: -0.01em;
+  }
+
+  .btn-submit:active { opacity: 0.8; }
+  .btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* EMPTY & LOADING STATES */
+  .state-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    color: var(--muted);
+    text-align: center;
+    gap: 0.75rem;
+  }
+
+  .state-icon { font-size: 2.5rem; }
+  .state-title { font-weight: 700; font-size: 1rem; color: var(--ink-mid); }
+  .state-sub { font-size: 0.85rem; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    top: 1rem; left: 50%; transform: translateX(-50%) translateY(-80px);
+    background: var(--ink);
+    color: white;
+    padding: 0.65rem 1.25rem;
+    border-radius: 2rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    z-index: 999;
+    transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), opacity 0.3s;
+    white-space: nowrap;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { background: var(--hadir); }
+  .toast.error { background: var(--alpha); }
+
+  .loading-spinner {
+    width: 20px; height: 20px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* No session */
+  .no-session {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 2rem; text-align: center; gap: 1rem;
+  }
+  .no-session h2 { font-size: 1.2rem; font-weight: 800; }
+  .no-session p { color: var(--muted); font-size: 0.9rem; }
+  .no-session a { background: var(--accent); color: white; padding: 0.8rem 2rem; border-radius: 0.75rem; text-decoration: none; font-weight: 700; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+
+<div id="appContent" style="display:none; flex-direction:column; min-height:100vh; min-height:100dvh;">
+
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="header-brand">SiAbsen Pro</div>
+        <div class="header-sub">Input Kehadiran Siswa</div>
+      </div>
+      <div class="header-user">
+        <div class="avatar" id="avatarInitial">-</div>
+        <div>
+          <div class="user-name" id="headerName">-</div>
+          <div class="user-role" id="headerRole">-</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-row">
+      <select id="selKelas">
+        <option value="">Pilih Kelas</option>
+      </select>
+      <select id="selMapel">
+        <option value="">Pilih Mapel</option>
+      </select>
+    </div>
+    <div class="filter-row three">
+      <input type="date" id="selDate">
+      <select id="selJam">
+        <option value="1">Jam 1</option>
+        <option value="2">Jam 2</option>
+        <option value="3">Jam 3</option>
+        <option value="4">Jam 4</option>
+        <option value="5">Jam 5</option>
+        <option value="6">Jam 6</option>
+        <option value="7">Jam 7</option>
+        <option value="8">Jam 8</option>
+      </select>
+      <button class="btn-load" id="btnLoad" onclick="loadSiswa()">Muat</button>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="dot" style="background:var(--hadir)"></div>Hadir</div>
+    <div class="legend-item"><div class="dot" style="background:var(--izin)"></div>Izin</div>
+    <div class="legend-item"><div class="dot" style="background:var(--sakit)"></div>Sakit</div>
+    <div class="legend-item"><div class="dot" style="background:var(--alpha)"></div>Alpha</div>
+    <div class="legend-item" style="margin-left:auto;">
+      <span id="todayDate" style="font-size:0.72rem;color:var(--muted);font-weight:600;"></span>
+    </div>
+  </div>
+
+  <div class="quick-bar" id="quickBar" style="display:none;">
+    <button class="quick-btn quick-hadir" onclick="setAllStatus('H')">✓ Semua Hadir</button>
+    <button class="quick-btn quick-reset" onclick="resetAll()">↺ Reset</button>
+  </div>
+
+  <div class="list-header" id="listHeader" style="display:none;">
+    <span class="list-title" id="listTitle">Daftar Siswa</span>
+    <span class="list-count" id="listCount"></span>
+  </div>
+
+  <div class="student-list" id="studentList">
+    <div class="state-message">
+      <div class="state-icon">📋</div>
+      <div class="state-title">Pilih Kelas & Mata Pelajaran</div>
+      <div class="state-sub">Pilih kelas, mapel, tanggal, dan jam ke berapa, lalu tekan Muat</div>
+    </div>
+  </div>
+
+  <div class="bottom-bar" id="bottomBar" style="display:none;">
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+    <div class="progress-text" id="progressText">0 dari 0 siswa telah diisi</div>
+    <button class="btn-submit" id="btnSubmit" onclick="submitAbsensi()">Simpan Absensi</button>
+  </div>
+
+</div>
+
+<!-- No session -->
+<div id="noSession" style="display:none;">
+  <div class="no-session">
+    <div style="font-size:3rem;">🔒</div>
+    <h2>Belum Login</h2>
+    <p>Silakan login terlebih dahulu untuk menggunakan fitur absensi</p>
+    <a href="/">Login Sekarang</a>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let teacher = null;
+let assignments = [];
+let students = [];
+let absensiData = {};
+let currentClassId = null;
+let currentSubject = null;
+
+function showToast(msg, type = 'default') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function init() {
+  const stored = localStorage.getItem('teacher');
+  const storedAssign = localStorage.getItem('assignments');
+  if (!stored) {
+    document.getElementById('noSession').style.display = 'block';
+    return;
+  }
+
+  teacher = JSON.parse(stored);
+  assignments = JSON.parse(storedAssign || '[]');
+
+  document.getElementById('appContent').style.display = 'flex';
+  document.getElementById('avatarInitial').textContent = teacher.name.charAt(0).toUpperCase();
+  document.getElementById('headerName').textContent = teacher.name;
+  document.getElementById('headerRole').textContent = teacher.role === 'admin' ? 'Administrator' : 'Guru';
+
+  // Set tanggal hari ini
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('selDate').value = today;
+  document.getElementById('todayDate').textContent = new Date().toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long' });
+
+  // Isi dropdown kelas berdasarkan assignments
+  const kelasSelect = document.getElementById('selKelas');
+  const uniqueKelas = [...new Map(assignments.map(a => [a.class_id, a])).values()];
+
+  if (teacher.role === 'admin') {
+    // Admin bisa lihat semua kelas
+    fetch('/api/classes')
+      .then(r => r.json())
+      .then(classes => {
+        classes.forEach(c => {
+          kelasSelect.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+        });
+      });
+  } else {
+    uniqueKelas.forEach(a => {
+      kelasSelect.innerHTML += `<option value="${a.class_id}">${a.class_name}</option>`;
+    });
+  }
+
+  kelasSelect.addEventListener('change', updateMapelOptions);
+}
+
+function updateMapelOptions() {
+  const classId = document.getElementById('selKelas').value;
+  const mapelSelect = document.getElementById('selMapel');
+  mapelSelect.innerHTML = '<option value="">Pilih Mapel</option>';
+
+  if (teacher.role === 'admin') {
+    mapelSelect.innerHTML = '<option value="Umum">Umum</option>';
+    return;
+  }
+
+  const filtered = assignments.filter(a => a.class_id == classId);
+  filtered.forEach(a => {
+    mapelSelect.innerHTML += `<option value="${a.subject}">${a.subject}</option>`;
+  });
+}
+
+async function loadSiswa() {
+  const classId = document.getElementById('selKelas').value;
+  const mapel = document.getElementById('selMapel').value;
+  const date = document.getElementById('selDate').value;
+  const lesson = document.getElementById('selJam').value;
+
+  if (!classId) return showToast('Pilih kelas terlebih dahulu', 'error');
+  if (!date) return showToast('Pilih tanggal terlebih dahulu', 'error');
+
+  const btn = document.getElementById('btnLoad');
+  btn.disabled = true;
+  btn.textContent = '...';
+
+  try {
+    const [siswaRes, absenRes] = await Promise.all([
+      fetch(`/api/students?classId=${classId}`),
+      fetch(`/api/attendance?date=${date}&classId=${classId}&lesson=${lesson}`)
+    ]);
+
+    students = await siswaRes.json();
+    const existingAbsen = await absenRes.json();
+
+    currentClassId = classId;
+    currentSubject = mapel;
+
+    // Init absensi data
+    absensiData = {};
+    students.forEach(s => {
+      if (existingAbsen[s.id]) {
+        absensiData[s.id] = existingAbsen[s.id].status;
+      }
+    });
+
+    renderStudents();
+    document.getElementById('quickBar').style.display = 'flex';
+    document.getElementById('listHeader').style.display = 'flex';
+    document.getElementById('bottomBar').style.display = 'block';
+    document.getElementById('listTitle').textContent = document.querySelector(`#selKelas option[value="${classId}"]`)?.textContent || 'Siswa';
+    updateProgress();
+  } catch (err) {
+    showToast('Gagal memuat data siswa', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Muat';
+  }
+}
+
+function renderStudents() {
+  const list = document.getElementById('studentList');
+  document.getElementById('listCount').textContent = `${students.length} siswa`;
+
+  if (!students.length) {
+    list.innerHTML = `<div class="state-message"><div class="state-icon">🏫</div><div class="state-title">Tidak ada siswa</div><div class="state-sub">Belum ada siswa di kelas ini</div></div>`;
+    return;
+  }
+
+  list.innerHTML = students.map((s, i) => {
+    const st = absensiData[s.id] || '';
+    return `
+      <div class="student-card${st ? ' status-'+st : ''}" id="card-${s.id}">
+        <div class="student-top">
+          <div class="student-no">${i + 1}</div>
+          <div class="student-info">
+            <div class="student-name">${s.name}</div>
+            <div class="student-nisn">NISN: ${s.nisn || '-'}</div>
+          </div>
+          <div class="status-badge ${st ? 'badge-'+st : 'badge-none'}" id="badge-${s.id}">
+            ${st ? statusLabel(st) : '—'}
+          </div>
+        </div>
+        <div class="status-buttons">
+          <button class="status-btn ${st==='H'?'active-H':''}" onclick="setStatus(${s.id},'H')">✓ Hadir</button>
+          <button class="status-btn ${st==='I'?'active-I':''}" onclick="setStatus(${s.id},'I')">📝 Izin</button>
+          <button class="status-btn ${st==='S'?'active-S':''}" onclick="setStatus(${s.id},'S')">🤒 Sakit</button>
+          <button class="status-btn ${st==='A'?'active-A':''}" onclick="setStatus(${s.id},'A')">✗ Alpha</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function statusLabel(s) {
+  return { H:'Hadir', I:'Izin', S:'Sakit', A:'Alpha' }[s] || s;
+}
+
+function setStatus(studentId, status) {
+  absensiData[studentId] = status;
+
+  // Update card
+  const card = document.getElementById('card-' + studentId);
+  card.className = 'student-card status-' + status;
+
+  // Update badge
+  const badge = document.getElementById('badge-' + studentId);
+  badge.className = 'status-badge badge-' + status;
+  badge.textContent = statusLabel(status);
+
+  // Update buttons in card
+  const buttons = card.querySelectorAll('.status-btn');
+  buttons.forEach(btn => {
+    const s = btn.textContent.includes('Hadir') ? 'H' : btn.textContent.includes('Izin') ? 'I' : btn.textContent.includes('Sakit') ? 'S' : 'A';
+    btn.className = 'status-btn' + (s === status ? ' active-' + s : '');
+  });
+
+  updateProgress();
+}
+
+function setAllStatus(status) {
+  students.forEach(s => setStatus(s.id, status));
+}
+
+function resetAll() {
+  absensiData = {};
+  renderStudents();
+  updateProgress();
+}
+
+function updateProgress() {
+  const filled = students.filter(s => absensiData[s.id]).length;
+  const total = students.length;
+  const pct = total ? (filled / total) * 100 : 0;
+
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `${filled} dari ${total} siswa telah diisi`;
+  document.getElementById('btnSubmit').disabled = filled === 0;
+}
+
+async function submitAbsensi() {
+  const date = document.getElementById('selDate').value;
+  const lesson = document.getElementById('selJam').value;
+
+  const attendanceData = students
+    .filter(s => absensiData[s.id])
+    .map(s => ({ student_id: s.id, status: absensiData[s.id], notes: null }));
+
+  if (!attendanceData.length) return showToast('Belum ada absensi yang diisi', 'error');
+
+  const btn = document.getElementById('btnSubmit');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading-spinner"></span>';
+
+  try {
+    const res = await fetch('/api/attendance/batch', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-teacher-id': teacher.id
+      },
+      body: JSON.stringify({
+        date, lesson, classId: currentClassId,
+        subject: currentSubject, attendanceData
+      })
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      showToast('✓ Absensi berhasil disimpan!', 'success');
+    } else {
+      showToast(data.message || 'Gagal menyimpan', 'error');
+    }
+  } catch (err) {
+    showToast('Koneksi error. Coba lagi.', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Simpan Absensi';
+    updateProgress();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
