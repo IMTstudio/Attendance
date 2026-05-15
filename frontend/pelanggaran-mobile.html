@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Input Pelanggaran — SiAbsen Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  
+  :root {
+    --ink: #0d1117; --surface: #ffffff; --bg: #f4f6f9; --border: #e1e8ef;
+    --muted: #7a8699; --accent: #6366f1; --accent-bg: #eef2ff;
+    --warning: #d97706; --warning-bg: #fef3c7; --error: #dc2626; --error-bg: #fee2e2;
+  }
+
+  body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+
+  .header {
+    background: var(--ink); color: white; padding: 1rem 1.25rem;
+    position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+  }
+  .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+  .header-brand { font-size: 1rem; font-weight: 800; letter-spacing: -0.02em; }
+  .header-sub { font-size: 0.7rem; color: rgba(255,255,255,0.5); margin-top: 1px; }
+  .header-user { display: flex; align-items: center; gap: 0.5rem; }
+  .avatar { width: 32px; height: 32px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; }
+  .user-name { font-size: 0.8rem; font-weight: 600; }
+  .user-role { font-size: 0.65rem; color: rgba(255,255,255,0.5); }
+
+  .form-container { flex: 1; padding: 1.25rem; padding-bottom: 6rem; }
+
+  .card { background: var(--surface); border-radius: 1rem; padding: 1.25rem; margin-bottom: 1rem; border: 1.5px solid var(--border); }
+  .card-title { font-size: 0.85rem; font-weight: 700; color: var(--ink); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.03em; }
+
+  .form-group { margin-bottom: 1rem; }
+  .form-group label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--muted); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.03em; }
+  select, input, textarea {
+    width: 100%; padding: 0.75rem; border: 1.5px solid var(--border); border-radius: 0.75rem;
+    font-family: inherit; font-size: 0.9rem; color: var(--ink); background: var(--bg); outline: none;
+  }
+  select:focus, input:focus, textarea:focus { border-color: var(--accent); background: white; }
+  textarea { resize: vertical; min-height: 80px; }
+
+  .category-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+  .category-btn {
+    padding: 0.75rem; border: 2px solid var(--border); border-radius: 0.75rem;
+    background: var(--bg); font-family: inherit; font-size: 0.75rem; font-weight: 600;
+    cursor: pointer; transition: all 0.15s; color: var(--muted); text-align: left;
+  }
+  .category-btn:active { transform: scale(0.98); }
+  .category-btn.active { border-color: var(--accent); background: var(--accent-bg); color: var(--accent); }
+
+  .points-display {
+    display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem;
+    background: var(--warning-bg); border-radius: 0.75rem; margin-top: 0.5rem;
+  }
+  .points-value { font-size: 1.2rem; font-weight: 700; color: var(--warning); }
+  .points-label { font-size: 0.8rem; color: var(--muted); }
+
+  .student-search { position: relative; }
+  .student-results {
+    position: absolute; top: 100%; left: 0; right: 0; background: white;
+    border: 1.5px solid var(--border); border-radius: 0.75rem; max-height: 200px;
+    overflow-y: auto; z-index: 50; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  .student-item {
+    padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); cursor: pointer;
+    transition: background 0.15s; font-size: 0.9rem;
+  }
+  .student-item:last-child { border-bottom: none; }
+  .student-item:hover { background: var(--bg); }
+  .student-item strong { color: var(--ink); }
+  .student-item small { color: var(--muted); display: block; margin-top: 2px; }
+
+  .selected-student {
+    display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem;
+    background: var(--accent-bg); border-radius: 0.75rem; margin-top: 0.5rem;
+  }
+  .selected-avatar {
+    width: 36px; height: 36px; background: var(--accent); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; color: white;
+    font-weight: 700; font-size: 0.9rem;
+  }
+  .selected-info { flex: 1; }
+  .selected-name { font-weight: 700; color: var(--ink); font-size: 0.9rem; }
+  .selected-class { font-size: 0.75rem; color: var(--muted); }
+  .btn-remove {
+    padding: 0.4rem 0.6rem; background: var(--error-bg); color: var(--error);
+    border: none; border-radius: 0.5rem; font-size: 0.7rem; font-weight: 600; cursor: pointer;
+  }
+
+  .bottom-bar {
+    position: fixed; bottom: 0; left: 0; right: 0; background: white;
+    border-top: 1px solid var(--border); padding: 1rem;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.08); z-index: 100;
+  }
+
+  .btn-submit {
+    width: 100%; padding: 1rem; background: var(--ink); color: white; border: none;
+    border-radius: 1rem; font-family: inherit; font-weight: 800; font-size: 1rem;
+    cursor: pointer; transition: opacity 0.2s; letter-spacing: -0.01em;
+  }
+  .btn-submit:active { opacity: 0.8; }
+  .btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .toast {
+    position: fixed; top: 1rem; left: 50%; transform: translateX(-50%) translateY(-80px);
+    background: var(--ink); color: white; padding: 0.65rem 1.25rem; border-radius: 2rem;
+    font-size: 0.85rem; font-weight: 600; z-index: 999; transition: transform 0.3s, opacity 0.3s;
+    white-space: nowrap; box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { background: #16a34a; }
+  .toast.error { background: var(--error); }
+
+  .no-session {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 2rem; text-align: center; gap: 1rem;
+  }
+  .no-session h2 { font-size: 1.2rem; font-weight: 800; }
+  .no-session p { color: var(--muted); font-size: 0.9rem; }
+  .no-session a {
+    background: var(--accent); color: white; padding: 0.8rem 2rem; border-radius: 0.75rem;
+    text-decoration: none; font-weight: 700; font-size: 0.9rem;
+  }
+</style>
+</head>
+<body>
+
+<div id="appContent" style="display:none; flex-direction:column; min-height:100vh;">
+
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="header-brand">SiAbsen Pro</div>
+        <div class="header-sub">Input Pelanggaran</div>
+      </div>
+      <div class="header-user">
+        <div class="avatar" id="avatarInitial">-</div>
+        <div>
+          <div class="user-name" id="headerName">-</div>
+          <div class="user-role" id="headerRole">-</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-container">
+    <div class="card">
+      <h2 class="card-title">🔍 Pilih Siswa</h2>
+      <div class="student-search">
+        <input type="text" id="searchStudent" placeholder="Ketik nama atau NISN..." oninput="searchStudent()">
+        <div class="student-results" id="studentResults"></div>
+      </div>
+      <div id="selectedStudentContainer" style="display:none;">
+        <div class="selected-student">
+          <div class="selected-avatar" id="selectedAvatar">?</div>
+          <div class="selected-info">
+            <div class="selected-name" id="selectedName">-</div>
+            <div class="selected-class" id="selectedClass">-</div>
+          </div>
+          <button class="btn-remove" onclick="removeSelected()">✕</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">⚠️ Kategori Pelanggaran</h2>
+      <div class="category-grid" id="categoryGrid">
+        <!-- Categories loaded dynamically -->
+      </div>
+      <input type="hidden" id="selectedCategory">
+      <div class="points-display" id="pointsDisplay" style="display:none;">
+        <span class="points-value" id="pointsValue">0</span>
+        <span class="points-label">poin pelanggaran</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">📝 Detail</h2>
+      <div class="form-group">
+        <label for="violationDate">Tanggal</label>
+        <input type="date" id="violationDate">
+      </div>
+      <div class="form-group">
+        <label for="description">Deskripsi (opsional)</label>
+        <textarea id="description" placeholder="Jelaskan detail pelanggaran..."></textarea>
+      </div>
+      <div class="form-group">
+        <label for="followup">Tindak Lanjut (opsional)</label>
+        <textarea id="followup" placeholder="Tindakan yang diambil..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <button class="btn-submit" id="btnSubmit" onclick="submitViolation()" disabled>Simpan Pelanggaran</button>
+  </div>
+
+</div>
+
+<div id="noSession" style="display:none;">
+  <div class="no-session">
+    <div style="font-size:3rem;">🔒</div>
+    <h2>Belum Login</h2>
+    <p>Silakan login terlebih dahulu</p>
+    <a href="/">Login Sekarang</a>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let teacher = null;
+let selectedStudent = null;
+let categories = [];
+
+function showToast(msg, type = 'default') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+async function init() {
+  const stored = localStorage.getItem('teacher');
+  if (!stored) {
+    document.getElementById('noSession').style.display = 'flex';
+    return;
+  }
+
+  teacher = JSON.parse(stored);
+  document.getElementById('appContent').style.display = 'flex';
+  document.getElementById('avatarInitial').textContent = teacher.name.charAt(0).toUpperCase();
+  document.getElementById('headerName').textContent = teacher.name;
+  document.getElementById('headerRole').textContent = teacher.role === 'admin' ? 'Administrator' : 'Guru';
+
+  // Set tanggal hari ini
+  document.getElementById('violationDate').value = new Date().toISOString().split('T')[0];
+
+  // Load kategori pelanggaran
+  await loadCategories();
+}
+
+async function loadCategories() {
+  const res = await fetch('/api/violations/categories');
+  categories = await res.json();
+  const grid = document.getElementById('categoryGrid');
+  grid.innerHTML = categories.map(c => `
+    <button class="category-btn" onclick="selectCategory(${c.id}, ${c.default_points})">
+      ${c.name}<br><small style="color:var(--muted);font-weight:normal">${c.description || '-'}</small>
+    </button>
+  `).join('');
+}
+
+function selectCategory(id, points) {
+  document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+  event.target.closest('.category-btn').classList.add('active');
+  document.getElementById('selectedCategory').value = id;
+  document.getElementById('pointsValue').textContent = points;
+  document.getElementById('pointsDisplay').style.display = 'flex';
+  checkForm();
+}
+
+async function searchStudent() {
+  const query = document.getElementById('searchStudent').value.trim();
+  const resultsDiv = document.getElementById('studentResults');
+  
+  if (query.length < 2) {
+    resultsDiv.style.display = 'none';
+    return;
+  }
+
+  const res = await fetch(`/api/students?search=${encodeURIComponent(query)}`);
+  const students = await res.json();
+  
+  if (students.length === 0) {
+    resultsDiv.innerHTML = '<div class="student-item" style="color:var(--muted)">Siswa tidak ditemukan</div>';
+  } else {
+    resultsDiv.innerHTML = students.map(s => `
+      <div class="student-item" onclick="selectStudent(${s.id}, '${s.name.replace(/'/g, "\\'")}', '${s.class_name || '-'}')">
+        <strong>${s.name}</strong>
+        <small>${s.nisn || 'NISN: -'} • ${s.class_name || 'Belum ada kelas'}</small>
+      </div>
+    `).join('');
+  }
+  resultsDiv.style.display = 'block';
+}
+
+function selectStudent(id, name, className) {
+  selectedStudent = { id, name, className };
+  document.getElementById('searchStudent').value = '';
+  document.getElementById('studentResults').style.display = 'none';
+  
+  document.getElementById('selectedAvatar').textContent = name.charAt(0).toUpperCase();
+  document.getElementById('selectedName').textContent = name;
+  document.getElementById('selectedClass').textContent = className;
+  document.getElementById('selectedStudentContainer').style.display = 'block';
+  
+  checkForm();
+}
+
+function removeSelected() {
+  selectedStudent = null;
+  document.getElementById('selectedStudentContainer').style.display = 'none';
+  checkForm();
+}
+
+function checkForm() {
+  const hasStudent = !!selectedStudent;
+  const hasCategory = !!document.getElementById('selectedCategory').value;
+  document.getElementById('btnSubmit').disabled = !(hasStudent && hasCategory);
+}
+
+async function submitViolation() {
+  if (!selectedStudent || !document.getElementById('selectedCategory').value) {
+    showToast('Lengkapi data terlebih dahulu', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('btnSubmit');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading-spinner" style="width:20px;height:20px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block"></span>';
+
+  try {
+    const res = await fetch('/api/violations', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-teacher-id': teacher.id
+      },
+      body: JSON.stringify({
+        student_id: selectedStudent.id,
+        category_id: parseInt(document.getElementById('selectedCategory').value),
+        date: document.getElementById('violationDate').value,
+        description: document.getElementById('description').value || null,
+        followup: document.getElementById('followup').value || null,
+        points: parseInt(document.getElementById('pointsValue').textContent)
+      })
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      showToast('✓ Pelanggaran berhasil dicatat!', 'success');
+      // Reset form
+      selectedStudent = null;
+      document.getElementById('selectedStudentContainer').style.display = 'none';
+      document.getElementById('description').value = '';
+      document.getElementById('followup').value = '';
+      document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('selectedCategory').value = '';
+      document.getElementById('pointsDisplay').style.display = 'none';
+      checkForm();
+    } else {
+      showToast(data.message || 'Gagal menyimpan', 'error');
+    }
+  } catch (err) {
+    showToast('Koneksi error. Coba lagi.', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Simpan Pelanggaran';
+  }
+}
+
+// Close search results when clicking outside
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.student-search')) {
+    document.getElementById('studentResults').style.display = 'none';
+  }
+});
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
