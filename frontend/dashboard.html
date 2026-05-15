@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — SiAbsen Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  :root {
+    --ink: #0f1923;
+    --ink-mid: #2d3748;
+    --muted: #718096;
+    --accent: #e85d2f;
+    --accent-dark: #c0431c;
+    --surface: #ffffff;
+    --bg: #f5f0eb;
+    --border: #e2d9cf;
+    --success: #2e7d32;
+    --error: #c0392b;
+    --hadir: #16a34a;
+    --izin: #2563eb;
+    --sakit: #d97706;
+    --alpha: #dc2626;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: 260px;
+    background: var(--ink);
+    color: white;
+    padding: 1.5rem;
+    overflow-y: auto;
+    z-index: 100;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .brand-icon {
+    width: 40px; height: 40px;
+    background: var(--accent);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .brand-icon svg { width: 22px; height: 22px; fill: white; }
+  .brand-text h1 { font-family: 'DM Serif Display', serif; font-size: 1rem; line-height: 1.2; }
+  .brand-text p { font-size: 0.7rem; color: rgba(255,255,255,0.5); margin-top: 2px; }
+
+  .nav-menu { list-style: none; }
+  .nav-item { margin-bottom: 0.25rem; }
+  
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    color: rgba(255,255,255,0.7);
+    text-decoration: none;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .nav-link:hover, .nav-link.active {
+    background: rgba(255,255,255,0.1);
+    color: white;
+  }
+
+  .nav-link svg { width: 18px; height: 18px; fill: currentColor; }
+
+  .user-info {
+    margin-top: auto;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .user-name { font-weight: 600; font-size: 0.9rem; }
+  .user-role { font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-top: 2px; }
+  .btn-logout {
+    margin-top: 0.75rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255,255,255,0.1);
+    border: none;
+    color: white;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-size: 0.8rem;
+    width: 100%;
+  }
+  .btn-logout:hover { background: rgba(255,255,255,0.2); }
+
+  /* Main Content */
+  .main-content {
+    margin-left: 260px;
+    padding: 2rem;
+  }
+
+  .page-header {
+    margin-bottom: 2rem;
+  }
+
+  .page-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.8rem;
+    color: var(--ink);
+    margin-bottom: 0.5rem;
+  }
+
+  .page-subtitle {
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  /* Stats Cards */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(15,25,35,0.06);
+    border: 1px solid var(--border);
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+  }
+
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .stat-trend {
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+  }
+
+  .stat-trend.up { color: var(--success); }
+  .stat-trend.down { color: var(--error); }
+
+  /* Charts Section */
+  .charts-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .chart-card {
+    background: var(--surface);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(15,25,35,0.06);
+    border: 1px solid var(--border);
+  }
+
+  .chart-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    color: var(--ink);
+    margin-bottom: 1rem;
+  }
+
+  /* Tables */
+  .table-card {
+    background: var(--surface);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(15,25,35,0.06);
+    border: 1px solid var(--border);
+    margin-bottom: 2rem;
+  }
+
+  .table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  .table-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    color: var(--ink);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th, td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  th {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  td { font-size: 0.9rem; }
+  tr:last-child td { border-bottom: none; }
+
+  .badge {
+    padding: 0.25rem 0.6rem;
+    border-radius: 0.4rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .badge-hadir { background: #dcfce7; color: var(--hadir); }
+  .badge-izin { background: #dbeafe; color: var(--izin); }
+  .badge-sakit { background: #fef3c7; color: var(--sakit); }
+  .badge-alpha { background: #fee2e2; color: var(--alpha); }
+
+  /* Monitor Realtime */
+  .monitor-section {
+    background: linear-gradient(135deg, var(--ink) 0%, #1a2634 100%);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    color: white;
+    margin-bottom: 2rem;
+  }
+
+  .monitor-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  .monitor-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.2rem;
+  }
+
+  .live-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.7);
+  }
+
+  .live-dot {
+    width: 8px; height: 8px;
+    background: var(--success);
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.2); }
+  }
+
+  .monitor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+
+  .monitor-item {
+    background: rgba(255,255,255,0.1);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .monitor-label {
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.6);
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+
+  .monitor-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  /* Buttons */
+  .btn {
+    padding: 0.6rem 1.2rem;
+    border-radius: 0.5rem;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: var(--accent-dark); }
+  .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--ink); }
+  .btn-outline:hover { border-color: var(--ink); }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .sidebar { width: 100%; height: auto; position: relative; padding: 1rem; }
+    .main-content { margin-left: 0; padding: 1rem; }
+    .charts-row { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="brand">
+    <div class="brand-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    <div class="brand-text">
+      <h1>SiAbsen Pro</h1>
+      <p>Dashboard Admin</p>
+    </div>
+  </div>
+
+  <ul class="nav-menu">
+    <li class="nav-item">
+      <a href="/dashboard" class="nav-link active">
+        <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+        Dashboard
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="/data-siswa" class="nav-link">
+        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        Data Siswa
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="/pelanggaran-dashboard" class="nav-link">
+        <svg viewBox="0 0 24 24"><path d="M12 2L1 21h22L12 2zm0 3.83L19.17 19H2.83L12 5.83zM11 16h2v2h-2v-2zm0-6h2v4h-2v-4z"/></svg>
+        Pelanggaran
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="/absensi" class="nav-link">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+        Input Absensi
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="/pelanggaran" class="nav-link">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+        Input Pelanggaran
+      </a>
+    </li>
+  </ul>
+
+  <div class="user-info">
+    <div class="user-name" id="userName">-</div>
+    <div class="user-role" id="userRole">-</div>
+    <button class="btn-logout" onclick="logout()">Logout</button>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="main-content">
+  <div class="page-header">
+    <h1 class="page-title">Dashboard</h1>
+    <p class="page-subtitle">Ringkasan absensi dan pelanggaran siswa</p>
+  </div>
+
+  <!-- Monitor Realtime -->
+  <div class="monitor-section">
+    <div class="monitor-header">
+      <h2 class="monitor-title">📊 Monitor Realtime</h2>
+      <div class="live-indicator">
+        <div class="live-dot"></div>
+        <span>Live Update</span>
+      </div>
+    </div>
+    <div class="monitor-grid" id="monitorGrid">
+      <div class="monitor-item">
+        <div class="monitor-label">Hadir Hari Ini</div>
+        <div class="monitor-value" id="monHadir">0</div>
+      </div>
+      <div class="monitor-item">
+        <div class="monitor-label">Izin</div>
+        <div class="monitor-value" id="monIzin">0</div>
+      </div>
+      <div class="monitor-item">
+        <div class="monitor-label">Sakit</div>
+        <div class="monitor-value" id="monSakit">0</div>
+      </div>
+      <div class="monitor-item">
+        <div class="monitor-label">Alpha</div>
+        <div class="monitor-value" id="monAlpha">0</div>
+      </div>
+      <div class="monitor-item">
+        <div class="monitor-label">Pelanggaran Hari Ini</div>
+        <div class="monitor-value" id="monPelanggaran">0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Total Siswa</div>
+      <div class="stat-value" id="statSiswa">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Guru</div>
+      <div class="stat-value" id="statGuru">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Kelas</div>
+      <div class="stat-value" id="statKelas">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Pelanggaran</div>
+      <div class="stat-value" id="statPelanggaran">0</div>
+      <div class="stat-trend" id="statPoin">0 poin akumulasi</div>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="charts-row">
+    <div class="chart-card">
+      <h3 class="chart-title">Tren Kehadiran (7 Hari Terakhir)</h3>
+      <canvas id="trendChart" height="200"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3 class="chart-title">Top Pelanggar</h3>
+      <table id="topViolatorsTable">
+        <thead>
+          <tr><th>Nama</th><th>Kelas</th><th>Poin</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Recent Activity Table -->
+  <div class="table-card">
+    <div class="table-header">
+      <h3 class="table-title">Absensi Hari Ini</h3>
+      <button class="btn btn-outline" onclick="exportAttendance()">Export CSV</button>
+    </div>
+    <table id="todayTable">
+      <thead>
+        <tr><th>Waktu</th><th>Siswa</th><th>Kelas</th><th>Status</th><th>Keterangan</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let socket = null;
+let teacher = null;
+
+// Init
+document.addEventListener('DOMContentLoaded', () => {
+  const stored = localStorage.getItem('teacher');
+  if (!stored) { window.location.href = '/'; return; }
+  
+  teacher = JSON.parse(stored);
+  document.getElementById('userName').textContent = teacher.name;
+  document.getElementById('userRole').textContent = teacher.role === 'admin' ? 'Administrator' : 'Guru';
+  
+  // Connect Socket.IO
+  socket = io();
+  socket.on('connect', () => console.log('Socket connected'));
+  socket.on('attendanceUpdated', loadDashboard);
+  socket.on('violationUpdated', loadDashboard);
+  socket.on('initialData', updateMonitor);
+  
+  loadDashboard();
+});
+
+async function loadDashboard() {
+  try {
+    const res = await fetch('/api/stats/dashboard');
+    const data = await res.json();
+    
+    if (data.stats) {
+      document.getElementById('statSiswa').textContent = data.stats.totalSiswa;
+      document.getElementById('statGuru').textContent = data.stats.totalGuru;
+      document.getElementById('statKelas').textContent = data.stats.totalKelas;
+      document.getElementById('statPelanggaran').textContent = data.stats.totalPelanggaran;
+      document.getElementById('statPoin').textContent = `${data.stats.totalPoinPelanggaran} poin akumulasi`;
+      
+      updateMonitor({
+        hadir: data.stats.absensiHariIni,
+        pelanggaran: data.stats.pelanggaranHariIni
+      });
+    }
+    
+    if (data.trendData) renderTrendChart(data.trendData);
+    if (data.topViolators) renderTopViolators(data.topViolators);
+    
+  } catch (err) {
+    console.error('Failed to load dashboard:', err);
+  }
+}
+
+function updateMonitor(data) {
+  if (data.hadir !== undefined) document.getElementById('monHadir').textContent = data.hadir;
+  if (data.izin !== undefined) document.getElementById('monIzin').textContent = data.izin;
+  if (data.sakit !== undefined) document.getElementById('monSakit').textContent = data.sakit;
+  if (data.alpha !== undefined) document.getElementById('monAlpha').textContent = data.alpha;
+  if (data.pelanggaran !== undefined) document.getElementById('monPelanggaran').textContent = data.pelanggaran;
+}
+
+function renderTrendChart(trendData) {
+  const ctx = document.getElementById('trendChart').getContext('2d');
+  
+  const labels = trendData.map(d => new Date(d.date).toLocaleDateString('id-ID', { weekday: 'short' }));
+  const hadir = trendData.map(d => d.hadir);
+  const izin = trendData.map(d => d.izin);
+  const sakit = trendData.map(d => d.sakit);
+  const alpha = trendData.map(d => d.alpha);
+  
+  if (window.trendChartInstance) window.trendChartInstance.destroy();
+  
+  window.trendChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Hadir', data: hadir, borderColor: '#16a34a', tension: 0.3, fill: false },
+        { label: 'Izin', data: izin, borderColor: '#2563eb', tension: 0.3, fill: false },
+        { label: 'Sakit', data: sakit, borderColor: '#d97706', tension: 0.3, fill: false },
+        { label: 'Alpha', data: alpha, borderColor: '#dc2626', tension: 0.3, fill: false }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'top' } },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+}
+
+function renderTopViolators(violators) {
+  const tbody = document.querySelector('#topViolatorsTable tbody');
+  tbody.innerHTML = violators.map(v => `
+    <tr>
+      <td>${v.name}</td>
+      <td>${v.kelas || '-'}</td>
+      <td><span class="badge badge-alpha">${v.poin}</span></td>
+    </tr>
+  `).join('');
+}
+
+function logout() {
+  localStorage.removeItem('teacher');
+  localStorage.removeItem('assignments');
+  window.location.href = '/';
+}
+
+async function exportAttendance() {
+  const today = new Date().toISOString().split('T')[0];
+  window.open(`/api/export/attendance?startDate=${today}&endDate=${today}`, '_blank');
+}
+</script>
+</body>
+</html>

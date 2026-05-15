@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pelanggaran — SiAbsen Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  :root {
+    --ink: #0f1923; --ink-mid: #2d3748; --muted: #718096;
+    --accent: #e85d2f; --surface: #ffffff; --bg: #f5f0eb;
+    --border: #e2d9cf; --error: #c0392b; --warning: #d97706;
+  }
+
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); min-height: 100vh; display: flex; }
+  
+  .sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0; width: 260px;
+    background: var(--ink); color: white; padding: 1.5rem; overflow-y: auto; z-index: 100;
+  }
+
+  .brand {
+    display: flex; align-items: center; gap: 0.75rem; margin-bottom: 2rem;
+    padding-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .brand-icon { width: 40px; height: 40px; background: var(--accent); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+  .brand-icon svg { width: 22px; height: 22px; fill: white; }
+  .brand-text h1 { font-family: 'DM Serif Display', serif; font-size: 1rem; }
+  .brand-text p { font-size: 0.7rem; color: rgba(255,255,255,0.5); }
+
+  .nav-menu { list-style: none; }
+  .nav-item { margin-bottom: 0.25rem; }
+  .nav-link {
+    display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem;
+    color: rgba(255,255,255,0.7); text-decoration: none; border-radius: 0.5rem;
+    transition: all 0.2s; font-size: 0.9rem; font-weight: 500;
+  }
+  .nav-link:hover, .nav-link.active { background: rgba(255,255,255,0.1); color: white; }
+  .nav-link svg { width: 18px; height: 18px; fill: currentColor; }
+
+  .user-info { margin-top: auto; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1); }
+  .user-name { font-weight: 600; font-size: 0.9rem; }
+  .user-role { font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-top: 2px; }
+  .btn-logout { margin-top: 0.75rem; padding: 0.5rem 1rem; background: rgba(255,255,255,0.1); border: none; color: white; border-radius: 0.5rem; cursor: pointer; font-size: 0.8rem; width: 100%; }
+
+  .main-content { margin-left: 260px; padding: 2rem; flex: 1; }
+  .page-header { margin-bottom: 2rem; }
+  .page-title { font-family: 'DM Serif Display', serif; font-size: 1.8rem; color: var(--ink); margin-bottom: 0.5rem; }
+  .page-subtitle { color: var(--muted); font-size: 0.9rem; }
+
+  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+  .stat-card { background: var(--surface); border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 20px rgba(15,25,35,0.06); border: 1px solid var(--border); }
+  .stat-label { font-size: 0.75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; margin-bottom: 0.5rem; }
+  .stat-value { font-size: 2rem; font-weight: 700; color: var(--ink); }
+  .stat-sub { font-size: 0.8rem; color: var(--muted); margin-top: 0.25rem; }
+
+  .card { background: var(--surface); border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 20px rgba(15,25,35,0.06); border: 1px solid var(--border); margin-bottom: 2rem; }
+  .card-title { font-family: 'DM Serif Display', serif; font-size: 1.1rem; color: var(--ink); margin-bottom: 1rem; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border); }
+  th { font-size: 0.75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; }
+  tr:last-child td { border-bottom: none; }
+
+  .badge { padding: 0.25rem 0.6rem; border-radius: 0.4rem; font-size: 0.75rem; font-weight: 600; }
+  .badge-points { background: #fef3c7; color: var(--warning); }
+  .badge-class { background: var(--bg); color: var(--ink); }
+
+  .actions-bar { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .btn { padding: 0.75rem 1.25rem; border-radius: 0.5rem; border: none; cursor: pointer; font-family: inherit; font-size: 0.85rem; font-weight: 600; transition: all 0.2s; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--ink); }
+
+  @media (max-width: 768px) {
+    .sidebar { width: 100%; height: auto; position: relative; padding: 1rem; }
+    .main-content { margin-left: 0; padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="brand">
+    <div class="brand-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <div class="brand-text"><h1>SiAbsen Pro</h1><p>Admin Panel</p></div>
+  </div>
+  <ul class="nav-menu">
+    <li class="nav-item"><a href="/dashboard" class="nav-link"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>Dashboard</a></li>
+    <li class="nav-item"><a href="/data-siswa" class="nav-link"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>Data Siswa</a></li>
+    <li class="nav-item"><a href="/pelanggaran-dashboard" class="nav-link active"><svg viewBox="0 0 24 24"><path d="M12 2L1 21h22L12 2zm0 3.83L19.17 19H2.83L12 5.83zM11 16h2v2h-2v-2zm0-6h2v4h-2v-4z"/></svg>Pelanggaran</a></li>
+    <li class="nav-item"><a href="/absensi" class="nav-link"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6z"/></svg>Input Absensi</a></li>
+  </ul>
+  <div class="user-info">
+    <div class="user-name" id="userName">-</div>
+    <div class="user-role" id="userRole">-</div>
+    <button class="btn-logout" onclick="logout()">Logout</button>
+  </div>
+</div>
+
+<div class="main-content">
+  <div class="page-header">
+    <h1 class="page-title">Rekap Pelanggaran</h1>
+    <p class="page-subtitle">Monitor dan rekap pelanggaran siswa</p>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">Total Pelanggaran</div>
+      <div class="stat-value" id="totalViolations">0</div>
+      <div class="stat-sub" id="totalPoints">0 poin</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Pelanggaran Hari Ini</div>
+      <div class="stat-value" id="todayViolations">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Siswa dengan Pelanggaran</div>
+      <div class="stat-value" id="studentsWithViolations">0</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="actions-bar">
+      <button class="btn btn-primary" onclick="window.location.href='/pelanggaran'">+ Input Pelanggaran</button>
+      <button class="btn btn-outline" onclick="exportViolations()">Export CSV</button>
+      <select id="filterKelas" onchange="loadData()" style="padding:0.6rem;border:1.5px solid var(--border);border-radius:0.5rem;font-family:inherit;">
+        <option value="">Semua Kelas</option>
+      </select>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Nama</th><th>Kelas</th><th>Total Pelanggaran</th><th>Total Poin</th><th>Aksi</th></tr>
+      </thead>
+      <tbody id="summaryTable"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">Riwayat Pelanggaran Terbaru</h3>
+    <table>
+      <thead>
+        <tr><th>Tanggal</th><th>Siswa</th><th>Kategori</th><th>Poin</th><th>Dicatat Oleh</th></tr>
+      </thead>
+      <tbody id="recentTable"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const stored = localStorage.getItem('teacher');
+  if (!stored) { window.location.href = '/'; return; }
+  const teacher = JSON.parse(stored);
+  document.getElementById('userName').textContent = teacher.name;
+  document.getElementById('userRole').textContent = teacher.role === 'admin' ? 'Administrator' : 'Guru';
+  
+  loadClasses();
+  loadData();
+});
+
+async function loadClasses() {
+  const res = await fetch('/api/classes');
+  const classes = await res.json();
+  const sel = document.getElementById('filterKelas');
+  sel.innerHTML = '<option value="">Semua Kelas</option>' + classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+}
+
+async function loadData() {
+  const classId = document.getElementById('filterKelas').value;
+  const res = await fetch(`/api/violations/summary${classId ? '?classId=' + classId : ''}`);
+  const data = await res.json();
+  
+  let totalViolations = 0, totalPoints = 0, studentsCount = 0;
+  const tbody = document.getElementById('summaryTable');
+  tbody.innerHTML = data.map(s => {
+    totalViolations += s.total_violations;
+    totalPoints += s.total_points;
+    if (s.total_violations > 0) studentsCount++;
+    return `
+      <tr>
+        <td>${s.name}</td>
+        <td><span class="badge badge-class">${s.class_name || '-'}</span></td>
+        <td>${s.total_violations}</td>
+        <td><span class="badge badge-points">${s.total_points}</span></td>
+        <td><button class="btn btn-outline" style="padding:0.4rem 0.6rem;font-size:0.75rem" onclick="viewDetail(${s.id})">Detail</button></td>
+      </tr>
+    `;
+  }).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--muted)">Belum ada data pelanggaran</td></tr>';
+  
+  document.getElementById('totalViolations').textContent = totalViolations;
+  document.getElementById('totalPoints').textContent = `${totalPoints} poin`;
+  document.getElementById('studentsWithViolations').textContent = studentsCount;
+  
+  // Load recent violations
+  const resRecent = await fetch('/api/violations?limit=10');
+  const recent = await resRecent.json();
+  const today = new Date().toISOString().split('T')[0];
+  const todayCount = recent.filter(v => v.date === today).length;
+  document.getElementById('todayViolations').textContent = todayCount;
+  
+  const recentBody = document.getElementById('recentTable');
+  recentBody.innerHTML = recent.map(v => `
+    <tr>
+      <td>${v.date}</td>
+      <td>${v.student_name}</td>
+      <td>${v.category_name || 'Umum'}</td>
+      <td><span class="badge badge-points">${v.points}</span></td>
+      <td>${v.teacher_name || '-'}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--muted)">Belum ada riwayat</td></tr>';
+}
+
+function viewDetail(studentId) {
+  alert('Fitur detail akan segera hadir!');
+}
+
+async function exportViolations() {
+  window.open('/api/export/violations', '_blank');
+}
+
+function logout() {
+  localStorage.removeItem('teacher');
+  window.location.href = '/';
+}
+</script>
+</body>
+</html>

@@ -833,6 +833,7 @@ app.get('/', (req, res) => res.sendFile(path.join(FRONTEND_PATH, 'login.html')))
 app.get('/dashboard', (req, res) => res.sendFile(path.join(FRONTEND_PATH, 'dashboard.html')));
 app.get('/absensi', (req, res) => res.sendFile(path.join(FRONTEND_PATH, 'absensi-mobile.html')));
 app.get('/pelanggaran', (req, res) => res.sendFile(path.join(FRONTEND_PATH, 'pelanggaran-mobile.html')));
+app.get('/pelanggaran-dashboard', (req, res) => res.sendFile(path.join(FRONTEND_PATH, 'pelanggaran-dashboard.html')));
 app.get('/data-siswa', (req, res) => res.sendFile(path.join(FRONTEND_PATH, 'data-siswa.html')));
 app.get('/data-guru', (req, res) => res.sendFile(path.join(FRONTEND_PATH, 'data-guru.html')));
 
